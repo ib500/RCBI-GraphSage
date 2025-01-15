@@ -1,6 +1,34 @@
+# Use TensorFlow 1.3.0 GPU as base
 FROM tensorflow/tensorflow:1.3.0-gpu
 
-RUN pip install networkx==1.11
-RUN rm /notebooks/*
+# 1) Install Python 3.6 from deadsnakes PPA
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get update && \
+    apt-get install -y python3.6 python3.6-dev python3.6-distutils wget && \
+    rm -rf /var/lib/apt/lists/*
 
+# 2) Install pip for Python 3.6
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3.6 get-pip.py && \
+    rm get-pip.py
+
+# 3) Uninstall the Python 2.7 version of TensorFlow that came pre-installed
+RUN pip uninstall -y tensorflow
+
+# 4) Install TensorFlow 1.3.0 for Python 3.6 + other dependencies
+RUN pip3.6 install tensorflow==1.3.0 networkx==1.11 scikit-learn
+
+# 5) Remove any default files from /notebooks (if present)
+RUN rm -rf /notebooks/*
+
+# 6) Copy your current directory into /notebooks in the container
 COPY . /notebooks
+
+# 7) Set the working directory
+WORKDIR /notebooks
+
+# 8) Default command: start a Bash shell
+CMD ["bash"]
+
